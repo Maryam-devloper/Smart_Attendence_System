@@ -1,78 +1,181 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package Smart_attendance_system.ui;
-import java.awt.*;
+
 import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
+public class Teacher extends javax.swing.JFrame {
+    
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Teacher.class.getName());
 
-/**
- *
- * @author pc
- */
-public class Teacher extends javax.swing.JPanel {
-   private String teacherName;
-    private Login parent;
+  
+    private String teacherId;
+    private String teacherName;
+    private JPanel pn_utama;
 
-    public Teacher(Login parent, String teacherName) {
-        this.parent = parent;
+    public Teacher(String teacherId, String teacherName) {
+        this.teacherId   = teacherId;
         this.teacherName = teacherName;
-        initComponents();
-        initCustomLayout();
+        initUI();
     }
 
-    private void initCustomLayout() {
-        this.setLayout(null);
-        this.setBackground(Color.WHITE);
-        this.setPreferredSize(new Dimension(800, 550));
+    public Teacher() {
+        this(null, "Teacher");
+    }
 
-        // Sidebar
-        JPanel sidebar = new JPanel(null);
-        sidebar.setBounds(0, 0, 200, 550);
-        sidebar.setBackground(new Color(0, 153, 255));
-        add(sidebar);
+    private void initUI() {
+        setTitle("Teacher Portal — " + teacherName);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1100, 720);
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setLayout(new BorderLayout());
 
-        JLabel lblTitle = new JLabel("Teacher Portal");
-        lblTitle.setForeground(Color.WHITE);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        lblTitle.setBounds(20, 30, 160, 30);
-        sidebar.add(lblTitle);
+        // ── TOP BAR ───────────────────────────────────────────────
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBackground(new Color(0, 51, 102));
+        topBar.setPreferredSize(new Dimension(1100, 55));
 
-        JButton btnLogout = new JButton("Logout");
-        btnLogout.setBounds(20, 480, 160, 30);
-        btnLogout.addActionListener(e -> parent.switchPage("LOGIN"));
+        JLabel title = new JLabel("  Teacher Management System");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        title.setForeground(Color.WHITE);
+        topBar.add(title, BorderLayout.WEST);
+
+        JLabel lblUser = new JLabel("Logged in: " + teacherName + "  ");
+        lblUser.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblUser.setForeground(Color.WHITE);
+        topBar.add(lblUser, BorderLayout.EAST);
+        add(topBar, BorderLayout.NORTH);
+
+        // ── SIDEBAR ───────────────────────────────────────────────
+        JPanel sidebar = new JPanel();
+        sidebar.setLayout(new GridLayout(11, 1, 4, 4));
+        sidebar.setBackground(new Color(0, 51, 102));
+        sidebar.setPreferredSize(new Dimension(220, 665));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(10, 8, 10, 8));
+
+        JLabel portalLabel = new JLabel("Teacher Portal", SwingConstants.CENTER);
+        portalLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        portalLabel.setForeground(new Color(204, 229, 255));
+        sidebar.add(portalLabel);
+
+        JButton btnDash       = sideBtn("Dashboard");
+        JButton btnAttendance = sideBtn("Mark Attendance");
+        JButton btnLeave      = sideBtn("Approve Leaves");
+        JButton btnQuery      = sideBtn("Student Queries");
+        JButton btnAnnounce   = sideBtn("Announcements");
+        JButton btnAssign     = sideBtn("Assignments");
+        JButton btnNotes      = sideBtn("Lecture Notes");
+        JButton btnOutline    = sideBtn("Course Outline");
+        JButton btnGuide      = sideBtn("Guidelines");
+        JButton btnLogout     = sideBtn("Logout");
+        btnLogout.setBackground(new Color(153, 0, 0));
+
+        sidebar.add(btnDash);
+        sidebar.add(btnAttendance);
+        sidebar.add(btnLeave);
+        sidebar.add(btnQuery);
+        sidebar.add(btnAnnounce);
+        sidebar.add(btnAssign);
+        sidebar.add(btnNotes);
+        sidebar.add(btnOutline);
+        sidebar.add(btnGuide);
         sidebar.add(btnLogout);
 
-        // Main Content Area
-        JLabel lblWelcome = new JLabel("Welcome, Prof. " + teacherName);
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        lblWelcome.setBounds(230, 30, 500, 40);
-        add(lblWelcome);
+        add(sidebar, BorderLayout.WEST);
 
-        // Action Card
-        JPanel cardMark = new JPanel(null);
-        cardMark.setBounds(230, 100, 250, 150);
-        cardMark.setBackground(new Color(243, 245, 255));
-        cardMark.setBorder(BorderFactory.createLineBorder(new Color(0, 153, 255), 1));
-        add(cardMark);
+        // ── MAIN PANEL ────────────────────────────────────────────
+        pn_utama = new JPanel(new BorderLayout());
+        pn_utama.setBackground(Color.WHITE);
+        pn_utama.setBorder(BorderFactory.createLineBorder(new Color(0, 51, 153)));
+        add(pn_utama, BorderLayout.CENTER);
 
-        JLabel lblMark = new JLabel("Mark Attendance");
-        lblMark.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblMark.setBounds(20, 20, 200, 25);
-        cardMark.add(lblMark);
+        // Default view: dashboard
+        showPanel(new menuDashboard(teacherId, teacherName));
 
-        JButton btnGo = new JButton("Open Sheet");
-        btnGo.setBounds(20, 90, 210, 35);
-        btnGo.setBackground(new Color(0, 153, 255));
-        btnGo.setForeground(Color.WHITE);
-        cardMark.add(btnGo);
+        // ── BUTTON ACTIONS ────────────────────────────────────────
+        btnDash.addActionListener(e -> showPanel(new menuDashboard(teacherId, teacherName)));
+
+        btnAttendance.addActionListener(e -> showPanel(new Attendence(teacherName, teacherId)));
+
+        btnLeave.addActionListener(e -> {
+            if (checkId()) showPanel(new TeacherLeaveApproval(teacherName, teacherId));
+        });
+
+        btnQuery.addActionListener(e -> {
+            if (checkId()) {
+                JFrame qf = new JFrame("Student Queries — " + teacherName);
+                qf.setSize(950, 680);
+                qf.setLocationRelativeTo(this);
+                qf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                qf.setLayout(new BorderLayout());
+                qf.add(new TeacherQueryReply(teacherId), BorderLayout.CENTER);
+                qf.setVisible(true);
+            }
+        });
+
+        // FIXED: now uses TeacherAnnouncement (functional panel, not static image)
+        btnAnnounce.addActionListener(e -> {
+            if (checkId()) showPanel(new TeacherAnnouncement(teacherId, teacherName));
+        });
+
+        btnAssign.addActionListener(e -> showPanel(new Assignments()));
+        btnNotes.addActionListener(e -> showPanel(new LectureNotes()));
+        btnOutline.addActionListener(e -> showPanel(new CourseOutline()));
+        btnGuide.addActionListener(e -> showPanel(new Guidelines()));
+
+        btnLogout.addActionListener(e -> {
+            int c = JOptionPane.showConfirmDialog(this, "Logout?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (c == JOptionPane.YES_OPTION) {
+                dispose();
+                new Smart_attendance_system.ui.Login().setVisible(true);
+            }
+        });
+
+        pack();
+        setSize(1100, 720);
+        setVisible(true);
     }
+
+    private JButton sideBtn(String text) {
+        JButton btn = new JButton(text);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(0, 102, 204));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setFocusPainted(false);
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 8));
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btn.setBackground(new Color(51, 153, 255)); }
+            public void mouseExited(java.awt.event.MouseEvent e)  { btn.setBackground(new Color(0, 102, 204)); }
+        });
+        return btn;
+    }
+
+    private void showPanel(JPanel panel) {
+        pn_utama.removeAll();
+        pn_utama.add(panel, BorderLayout.CENTER);
+        pn_utama.revalidate();
+        pn_utama.repaint();
+    }
+
+    private boolean checkId() {
+        if (teacherId == null || teacherId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Teacher ID not found. Please re-login.");
+            return false;
+        }
+        return true;}
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 400, Short.MAX_VALUE)
@@ -81,8 +184,16 @@ public class Teacher extends javax.swing.JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 300, Short.MAX_VALUE)
         );
+
+        pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new Teacher("EMP-001", "Demo Teacher").setVisible(true));
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

@@ -1,22 +1,15 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
+
 package Smart_attendance_system.ui;
 
 import javax.swing.*;
 import java.awt.*;
 import Smart_attendance_system.logic.File_Manager;
-import java.awt.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.net.URL;
 
-/**
- *
- * @author pc
- */
+
 public class Signup_UI extends javax.swing.JPanel {
     private Login parent; 
     private JTextField txtName, txtID;
@@ -188,18 +181,18 @@ public class Signup_UI extends javax.swing.JPanel {
             pst.setString(5, dept);
 
             if (role.equals("Student")) {
-                pst.setString(6, cbSemester.getSelectedItem().toString());
-                pst.setString(7, cbSection.getSelectedItem().toString());
-                pst.setString(8, "N/A");
-            } else {
-                pst.setString(6, "N/A");
-                pst.setString(7, "N/A");
-                String subs = subjectBoxes.stream()
-                        .filter(AbstractButton::isSelected)
-                        .map(AbstractButton::getText)
-                        .collect(Collectors.joining(", "));
-                pst.setString(8, subs.isEmpty() ? "None" : subs);
-            }
+    pst.setString(6, cbSemester.getSelectedItem().toString());
+    pst.setString(7, cbSection.getSelectedItem().toString());
+    pst.setNull(8, java.sql.Types.VARCHAR); // NULL instead of "N/A"
+} else {
+    pst.setString(6, null); // NULL for teachers
+    pst.setString(7, null); // NULL for teachers  
+    String subs = subjectBoxes.stream()
+            .filter(AbstractButton::isSelected)
+            .map(AbstractButton::getText)
+            .collect(Collectors.joining(", "));
+    pst.setString(8, subs.isEmpty() ? null : subs);
+}
 
             pst.executeUpdate();
             JOptionPane.showMessageDialog(this, "Account Created Successfully!");
